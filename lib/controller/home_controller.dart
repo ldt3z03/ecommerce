@@ -3,15 +3,18 @@ import 'package:ecommerce_app/model/product_category/product_category.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../model/product/product.dart';
+import 'cart_controller.dart';
 
-class HomeController extends GetxController{
-  FirebaseFirestore firestore  = FirebaseFirestore.instance;
+class HomeController extends GetxController {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
   late CollectionReference productCollection;
   late CollectionReference categoryCollection;
 
   List<Product> products = [];
   List<Product> productShowInUI = [];
   List<ProductCategory> productCategories = [];
+
+  final CartController cartController = Get.put(CartController());
 
   @override
   Future<void> onInit() async {
@@ -25,8 +28,11 @@ class HomeController extends GetxController{
   fetchProducts() async {
     try {
       QuerySnapshot productSnapshot = await productCollection.get();
-      final List<Product> retrievedProducts = productSnapshot.docs.map((doc) =>
-          Product.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      final List<Product> retrievedProducts = productSnapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return Product.fromJson(data);
+      }).toList();
       products.clear();
       products.assignAll(retrievedProducts);
       productShowInUI.assignAll(products);
@@ -39,11 +45,15 @@ class HomeController extends GetxController{
     }
   }
 
+
   fetchCategory() async {
     try {
       QuerySnapshot categorySnapshot = await categoryCollection.get();
-      final List<ProductCategory> retrievedCategories = categorySnapshot.docs.map((doc) =>
-          ProductCategory.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      final List<ProductCategory> retrievedCategories = categorySnapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return ProductCategory.fromJson(data);
+      }).toList();
       productCategories.clear();
       productCategories.assignAll(retrievedCategories);
     } catch (e) {
@@ -54,10 +64,38 @@ class HomeController extends GetxController{
     }
   }
 
-  filterByCategory(String category){
-      productShowInUI.clear();
-      productShowInUI = products.where((product) => product.category == category).toList();
-      update();
+
+  Product? getProductById(String id) {
+    return products.firstWhereOrNull((product) => product.id == id);
+  }
+
+  String getCategoryNameById(String categoryIdOrName) {
+    final categoryById = productCategories.firstWhereOrNull(
+            (cat) => cat.id == categoryIdOrName
+    );
+    if (categoryById != null) {
+      return categoryById.name ?? "Unknown";
+    }
+
+    final categoryByName = productCategories.firstWhereOrNull(
+            (cat) => cat.name?.toLowerCase() == categoryIdOrName.toLowerCase()
+    );
+    if (categoryByName != null) {
+      return categoryByName.name ?? "Unknown";
+    }
+
+    return categoryIdOrName;
+  }
+
+  filterByCategory(String categoryName) {
+    productShowInUI.clear();
+    productShowInUI = products.where((product) {
+      return productCategories.any((cat) =>
+      cat.name == categoryName &&
+          (product.category == cat.id || product.category == cat.name)
+      );
+    }).toList();
+    update();
   }
 
   filterByBrand(List<String> brands) {

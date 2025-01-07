@@ -1,236 +1,217 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../controller/home_controller.dart';
+import '../controller/cart_controller.dart';
+import '../controller/login_controller.dart';
+import '../model/product/product.dart';
+import '../model/cart/cart.dart';
+import 'home_page.dart';
 
-class ProductDescriptionPage extends StatelessWidget {
 
+class ProductDescriptionPage extends StatefulWidget {
+  @override
+  State<ProductDescriptionPage> createState() => _ProductDescriptionPageState();
+}
 
-  const ProductDescriptionPage({
-    super.key,
-
-  });
+class _ProductDescriptionPageState extends State<ProductDescriptionPage> {
+  int quantity = 1;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: MediaQuery.of(context).size.height * 0.5,
-            pinned: true,
-            backgroundColor: Colors.white,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back, color: Colors.black),
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.favorite_border, color: Colors.black),
-                ),
-                onPressed: () {},
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'product-',
-                child: Container(
-                  color: Colors.grey[100],
-                  child: Image.network(
-                    'https://cdn.evrysz.net/1000x1000/1/adidas-samba-og-ji3215.png',
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
+    final String productId = Get.arguments ?? "";
+
+    return GetBuilder<HomeController>(builder: (ctrl) {
+      final Product? product = ctrl.getProductById(productId);
+
+      if (product == null) {
+        return Scaffold(
+          appBar: AppBar(title: const Text("Product Details")),
+          body: const Center(child: Text("Product not found")),
+        );
+      }
+
+      // Lấy userId từ LoginController
+      final LoginController loginController = Get.find<LoginController>();
+      final userId = loginController.getCurrentUser()?.id;
+
+      // Kiểm tra xem userId có hợp lệ không
+      if (userId == null) {
+        return Scaffold(
+          appBar: AppBar(title: const Text("Product Details")),
+          body: const Center(child: Text("Please log in to add products to the cart.")),
+        );
+      }
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(product.name ?? "Product Details"),
+          backgroundColor: Colors.teal, // Màu nền app bar mới
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Get.off(HomePage()), // Điều hướng đến HomePage khi nhấn nút quay lại
           ),
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  product.image ?? "",
+                  height: 250, // Kích thước hình ảnh lớn hơn
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  product.name ?? "No Name",
+                  style: const TextStyle(
+                    fontSize: 26, // Tiêu đề lớn hơn
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87, // Màu sắc hợp với nền
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "\$${product.price?.toStringAsFixed(2) ?? "0.00"}",
+                  style: const TextStyle(
+                    fontSize: 22, // Kích thước giá lớn hơn
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '50%',
-                            style: TextStyle(
-                              color: Colors.red[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'In Stock',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      "Category: ",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    const SizedBox(height: 16),
                     Text(
-                      'name',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
+                      ctrl.getCategoryNameById(product.category ?? "Unknown"),
+                      style: const TextStyle(fontSize: 16, color: Colors.black54),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '6666',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Select Size (US)',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                      ),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${40 + index}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Product Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'The Adidas Samba is a classic sneaker that has been a staple in the fashion world for decades. Originally designed as an indoor soccer shoe, it has evolved into a versatile lifestyle sneaker.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                        height: 1.6,
-                      ),
-                    ),
-                    const SizedBox(height: 100),
                   ],
                 ),
-              ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text(
+                      "Brand: ",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(
+                      product.brand ?? "Unknown",
+                      style: const TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Product Details",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87, // Màu chữ hợp với giao diện
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  product.description ?? "No description available.",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: Colors.black87, // Màu văn bản hợp lý
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Text(
+                      "Quantity:",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      onPressed: () {
+                        if (quantity > 1) {
+                          setState(() {
+                            quantity--;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.remove),
+                      color: Colors.teal, // Màu sắc cho icon
+                    ),
+                    Text(
+                      "$quantity",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          quantity++;
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                      color: Colors.teal, // Màu sắc cho icon
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Tạo cart với userId từ LoginController
+                      Cart cart = Cart(
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: quantity,
+                        totalPrice: (product.price ?? 0) * quantity,
+                        image: product.image,
+                        productCategory: product.category,
+                        isOffer: product.offer,
+                        userId: userId, // Lấy userId từ model User
+                      );
+
+                      // Thực hiện thêm vào giỏ hàng
+                      Get.find<CartController>().addToCart(cart);
+                      Get.snackbar(
+                        "Cart",
+                        "Added $quantity item(s) to cart.",
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.teal, // Màu sắc cho snackbar
+                        colorText: Colors.white,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal, // Màu nền nút
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "Add to Cart",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // Màu chữ trắng trên nút
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.shopping_cart_outlined),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Buy Now',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+      );
+    });
   }
 }

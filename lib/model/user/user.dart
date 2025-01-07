@@ -1,4 +1,3 @@
-
 import 'package:json_annotation/json_annotation.dart';
 part 'user.g.dart';
 
@@ -13,13 +12,12 @@ class User {
   @JsonKey(name: "phonenumber")
   int? phonenumber;
 
-
-
   User({
     this.id,
     this.name,
     this.phonenumber,
   });
-  factory User.fromJson(Map<String,dynamic> json) => _$UserFromJson(json);
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
